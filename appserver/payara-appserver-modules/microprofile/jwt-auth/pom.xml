@@ -48,12 +48,10 @@
         <version>5.194-SNAPSHOT</version>
     </parent>
 
-    <groupId>fish.payara.server.internal.payara-appserver-modules</groupId>
     <artifactId>microprofile-jwt-auth</artifactId>
     <name>Microprofile - JWT</name>
 
     <description>Implementation of MicroProfile Interoperable JWT RBAC API</description>
-    <packaging>glassfish-jar</packaging>
     
     <build>
         <plugins>
@@ -82,38 +80,25 @@
         <dependency>
             <groupId>org.eclipse.microprofile.jwt</groupId>
             <artifactId>microprofile-jwt-auth-api</artifactId>
+            <version>${microprofile-jwt-auth.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.microprofile.config</groupId>
+            <artifactId>microprofile-config-api</artifactId>
+            <version>${microprofile-config.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.glassfish.soteria</groupId>
+            <artifactId>javax.security.enterprise</artifactId>
+            <version>${jakarta.security.enterprise.version}</version>
         </dependency>
 
         <dependency>
             <groupId>jakarta.platform</groupId>
             <artifactId>jakarta.jakartaee-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>jakarta.security.enterprise</groupId>
-            <artifactId>jakarta.security.enterprise-api</artifactId>
-        </dependency>
-        
-        <dependency>
-          <groupId>org.glassfish.soteria</groupId>
-          <artifactId>javax.security.enterprise</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>fish.payara.server.internal.common</groupId>
-            <artifactId>internal-api</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-    
-        <dependency>
-            <groupId>fish.payara.server.internal.deployment</groupId>
-            <artifactId>dol</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-common</artifactId>
+            <version>${jakartaee.api.version}</version>
         </dependency>
 
         <dependency>
