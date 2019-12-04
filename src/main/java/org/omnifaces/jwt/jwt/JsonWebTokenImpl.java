@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package fish.payara.microprofile.jwtauth.jwt;
+package org.omnifaces.jwt.jwt;
 
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;

@@ -37,35 +37,29 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package fish.payara.microprofile.jwtauth.jwt;
+package org.omnifaces.jwt.jaxrs;
 
-import org.eclipse.microprofile.jwt.ClaimValue;
+import static javax.ws.rs.Priorities.AUTHORIZATION;
+
+import java.io.IOException;
+
+import javax.annotation.Priority;
+import javax.ws.rs.ForbiddenException;
+import javax.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestFilter;
 
 /**
- * A default implementation of {@link ClaimValue}
+ * This JAX-RS filter makes sure no caller can access the resource method(s) to
+ * which this filter is applied.
  * 
  * @author Arjan Tijms
- *
- * @param <T> the expected type of the claim
  */
-public class ClaimValueImpl<T> implements ClaimValue<T> {
-    
-    private final String name;
-    private final T value;
-    
-    public ClaimValueImpl(String name, T value) {
-        this.name = name;
-        this.value = value;
-    }
+@Priority(AUTHORIZATION)
+public class DenyAllRequestFilter implements ContainerRequestFilter {
 
     @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public T getValue() {
-        return value;
+    public void filter(final ContainerRequestContext requestContext) throws IOException {
+        throw new ForbiddenException("Deny All");
     }
 
 }

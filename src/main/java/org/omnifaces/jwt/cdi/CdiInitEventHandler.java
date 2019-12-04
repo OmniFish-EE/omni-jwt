@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package fish.payara.microprofile.jwtauth.cdi;
+package org.omnifaces.jwt.cdi;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
@@ -73,13 +73,12 @@ import org.eclipse.microprofile.jwt.ClaimValue;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.glassfish.soteria.cdi.CdiProducer;
 import org.glassfish.soteria.cdi.CdiUtils;
-
-import fish.payara.microprofile.jwtauth.eesecurity.JWTAuthenticationMechanism;
-import fish.payara.microprofile.jwtauth.eesecurity.SignedJWTIdentityStore;
-import fish.payara.microprofile.jwtauth.jwt.ClaimAnnotationLiteral;
-import fish.payara.microprofile.jwtauth.jwt.ClaimValueImpl;
-import fish.payara.microprofile.jwtauth.jwt.JWTInjectableType;
-import fish.payara.microprofile.jwtauth.jwt.JsonWebTokenImpl;
+import org.omnifaces.jwt.eesecurity.JWTAuthenticationMechanism;
+import org.omnifaces.jwt.eesecurity.SignedJWTIdentityStore;
+import org.omnifaces.jwt.jwt.ClaimAnnotationLiteral;
+import org.omnifaces.jwt.jwt.ClaimValueImpl;
+import org.omnifaces.jwt.jwt.JWTInjectableType;
+import org.omnifaces.jwt.jwt.JsonWebTokenImpl;
 
 /**
  * This class contains most of the actual logic from CdiExtension. Places in a separate

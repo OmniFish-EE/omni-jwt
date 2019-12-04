@@ -37,11 +37,11 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package fish.payara.microprofile.jwtauth.tck;
+package org.omnifaces.jwt.tck;
 
 import java.security.PublicKey;
 import org.eclipse.microprofile.jwt.JsonWebToken;
-import fish.payara.microprofile.jwtauth.jwt.JwtTokenParser;
+import org.omnifaces.jwt.jwt.JwtTokenParser;
 
 /**
  *

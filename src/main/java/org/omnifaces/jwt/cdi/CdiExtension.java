@@ -37,10 +37,8 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package fish.payara.microprofile.jwtauth.cdi;
+package org.omnifaces.jwt.cdi;
 
-import fish.payara.microprofile.jwtauth.eesecurity.JWTAuthenticationMechanism;
-import fish.payara.microprofile.jwtauth.eesecurity.SignedJWTIdentityStore;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -67,6 +65,9 @@ import org.eclipse.microprofile.auth.LoginConfig;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.jwt.Claim;
+import org.omnifaces.jwt.eesecurity.JWTAuthenticationMechanism;
+import org.omnifaces.jwt.eesecurity.SignedJWTIdentityStore;
+
 import static org.eclipse.microprofile.jwt.Claims.UNKNOWN;
 import static org.eclipse.microprofile.jwt.config.Names.VERIFIER_PUBLIC_KEY;
 import static org.eclipse.microprofile.jwt.config.Names.VERIFIER_PUBLIC_KEY_LOCATION;

@@ -37,66 +37,35 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package fish.payara.microprofile.jwtauth.jaxrs;
+package org.omnifaces.jwt.cdi;
 
-import java.lang.reflect.Method;
+import java.beans.Beans;
 
-import javax.annotation.security.DenyAll;
-import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.container.DynamicFeature;
-import javax.ws.rs.container.ResourceInfo;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.FeatureContext;
-import javax.ws.rs.ext.Provider;
+import javax.enterprise.context.Dependent;
+import javax.enterprise.inject.spi.InjectionPoint;
+import javax.inject.Inject;
 
 /**
- * This JAX-RS dynamic feature will install filters for JAX-RS resources
- * that check roles or deny all access.
- * 
+ * Dummy class used to take the injection point for "InjectionPoint" of, for usage in the
+ * implementation of
+ * {@link Beans#getCurrentInjectionPoint(javax.enterprise.context.spi.CreationalContext)}.
+ * <p>
+ * The actual injectionPoint being injected is not used.
+ *
  * @author Arjan Tijms
  */
-@Provider
-public class RolesAllowedDynamicFeature implements DynamicFeature {
-    
-    @Context
-    private HttpServletRequest request;
-    
-    @Context
-    private HttpServletResponse response;
+@Dependent
+public class InjectionPointGenerator {
 
-    @Override
-    public void configure(ResourceInfo resourceInfo, FeatureContext configuration) {
-        Method resourceMethod = resourceInfo.getResourceMethod();
+    // TODO: this is a workaround originally for older OWB versions, but while OWB is fixed, newer Weld
+    // versions are now broken. It seems this needs to be fixed in CDI 2.1, or perhaps CDI 3.
+    // See https://issues.jboss.org/browse/CDI-610
 
-        // ## Method level access
-        
-        // Deny All (Excluded) resources cannot be accessed by anyone
-        if (resourceMethod.isAnnotationPresent(DenyAll.class)) {
-            configuration.register(new DenyAllRequestFilter());
-            return;
-        }
-        
-        // Permit All (Unchecked) resources are free to be accessed by everyone
-        if (resourceMethod.isAnnotationPresent(PermitAll.class)) {
-            return;
-        }
+    @Inject
+    private InjectionPoint injectionPoint;
 
-        // Access is granted via role 
-        RolesAllowed rolesAllowed = resourceMethod.getAnnotation(RolesAllowed.class);
-        if (rolesAllowed != null) {
-            configuration.register(new RolesAllowedRequestFilter(request, response, rolesAllowed.value()));
-            return;
-        }
-        
-        // ## Class level access
-
-        rolesAllowed = resourceInfo.getResourceClass().getAnnotation(RolesAllowed.class);
-        if (rolesAllowed != null) {
-            configuration.register(new RolesAllowedRequestFilter(request, response, rolesAllowed.value()));
-        }
+    public InjectionPoint getInjectionPoint() {
+        return injectionPoint;
     }
- 
+
 }

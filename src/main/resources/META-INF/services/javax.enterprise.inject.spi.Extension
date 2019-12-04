@@ -1,2 +1,2 @@
-fish.payara.microprofile.jwtauth.cdi.CdiExtension
+org.omnifaces.jwt.cdi.CdiExtension
 

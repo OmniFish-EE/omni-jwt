@@ -37,35 +37,33 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package fish.payara.microprofile.jwtauth.cdi;
+package org.omnifaces.jwt.jwt;
 
-import java.beans.Beans;
+import static org.eclipse.microprofile.jwt.Claims.UNKNOWN;
 
-import javax.enterprise.context.Dependent;
-import javax.enterprise.inject.spi.InjectionPoint;
-import javax.inject.Inject;
+import javax.enterprise.util.AnnotationLiteral;
+
+import org.eclipse.microprofile.jwt.Claim;
+import org.eclipse.microprofile.jwt.Claims;
 
 /**
- * Dummy class used to take the injection point for "InjectionPoint" of, for usage in the
- * implementation of
- * {@link Beans#getCurrentInjectionPoint(javax.enterprise.context.spi.CreationalContext)}.
- * <p>
- * The actual injectionPoint being injected is not used.
- *
+ * An annotation literal for Claim.
+ * 
  * @author Arjan Tijms
  */
-@Dependent
-public class InjectionPointGenerator {
+@SuppressWarnings("all")
+public class ClaimAnnotationLiteral extends AnnotationLiteral<Claim> implements Claim {
+    
+    private static final long serialVersionUID = 1L;
 
-    // TODO: this is a workaround originally for older OWB versions, but while OWB is fixed, newer Weld
-    // versions are now broken. It seems this needs to be fixed in CDI 2.1, or perhaps CDI 3.
-    // See https://issues.jboss.org/browse/CDI-610
-
-    @Inject
-    private InjectionPoint injectionPoint;
-
-    public InjectionPoint getInjectionPoint() {
-        return injectionPoint;
+    @Override
+    public String value() {
+        return "";
     }
 
+    @Override
+    public Claims standard() {
+        return UNKNOWN;
+    }
+    
 }

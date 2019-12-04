@@ -37,12 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package fish.payara.microprofile.jwtauth.eesecurity;
+package org.omnifaces.jwt.eesecurity;
 
-import fish.payara.microprofile.jwtauth.jwt.JsonWebTokenImpl;
-import fish.payara.microprofile.jwtauth.jwt.JwtTokenParser;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.omnifaces.jwt.jwt.JsonWebTokenImpl;
+import org.omnifaces.jwt.jwt.JwtTokenParser;
 
 import javax.enterprise.inject.spi.DeploymentException;
 import javax.json.Json;

@@ -37,29 +37,47 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package fish.payara.microprofile.jwtauth.jaxrs;
+package org.omnifaces.jwt.cdi;
 
-import static javax.ws.rs.Priorities.AUTHORIZATION;
+import static java.util.Arrays.asList;
 
-import java.io.IOException;
-
-import javax.annotation.Priority;
-import javax.ws.rs.ForbiddenException;
-import javax.ws.rs.container.ContainerRequestContext;
-import javax.ws.rs.container.ContainerRequestFilter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 
 /**
- * This JAX-RS filter makes sure no caller can access the resource method(s) to
- * which this filter is applied.
+ * Minimal implementation of ParameterizedType, to programmatically represent
+ * the generic list.
  * 
  * @author Arjan Tijms
  */
-@Priority(AUTHORIZATION)
-public class DenyAllRequestFilter implements ContainerRequestFilter {
+public class ParameterizedTypeImpl implements ParameterizedType {
+
+    private final Type rawType;
+    private final Type[] actualTypeArguments;
+
+    public ParameterizedTypeImpl(Type rawType, Type... actualTypeArguments) {
+        this.rawType = rawType;
+        this.actualTypeArguments = actualTypeArguments;
+    }
 
     @Override
-    public void filter(final ContainerRequestContext requestContext) throws IOException {
-        throw new ForbiddenException("Deny All");
+    public Type getRawType() {
+        return rawType;
+    }
+
+    @Override
+    public Type[] getActualTypeArguments() {
+        return actualTypeArguments;
+    }
+
+    @Override
+    public Type getOwnerType() {
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return "ParameterizedTypeImpl (" + rawType + ") - " + asList(actualTypeArguments) + " *";
     }
 
 }

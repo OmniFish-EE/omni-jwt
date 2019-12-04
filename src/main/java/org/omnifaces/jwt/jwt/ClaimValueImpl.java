@@ -37,47 +37,35 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package fish.payara.microprofile.jwtauth.cdi;
+package org.omnifaces.jwt.jwt;
 
-import static java.util.Arrays.asList;
-
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import org.eclipse.microprofile.jwt.ClaimValue;
 
 /**
- * Minimal implementation of ParameterizedType, to programmatically represent
- * the generic list.
+ * A default implementation of {@link ClaimValue}
  * 
  * @author Arjan Tijms
+ *
+ * @param <T> the expected type of the claim
  */
-public class ParameterizedTypeImpl implements ParameterizedType {
-
-    private final Type rawType;
-    private final Type[] actualTypeArguments;
-
-    public ParameterizedTypeImpl(Type rawType, Type... actualTypeArguments) {
-        this.rawType = rawType;
-        this.actualTypeArguments = actualTypeArguments;
+public class ClaimValueImpl<T> implements ClaimValue<T> {
+    
+    private final String name;
+    private final T value;
+    
+    public ClaimValueImpl(String name, T value) {
+        this.name = name;
+        this.value = value;
     }
 
     @Override
-    public Type getRawType() {
-        return rawType;
+    public String getName() {
+        return name;
     }
 
     @Override
-    public Type[] getActualTypeArguments() {
-        return actualTypeArguments;
-    }
-
-    @Override
-    public Type getOwnerType() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return "ParameterizedTypeImpl (" + rawType + ") - " + asList(actualTypeArguments) + " *";
+    public T getValue() {
+        return value;
     }
 
 }

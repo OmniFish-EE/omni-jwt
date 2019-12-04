@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package fish.payara.microprofile.jwtauth.servlet;
+package org.omnifaces.jwt.servlet;
 
 import static java.util.logging.Level.FINEST;
 import static java.util.logging.Level.INFO;
@@ -51,7 +51,7 @@ import javax.servlet.ServletContainerInitializer;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 
-import fish.payara.microprofile.jwtauth.cdi.CdiExtension;
+import org.omnifaces.jwt.cdi.CdiExtension;
 
 /**
  * This servlet container initializer checks if CDI is active and if so obtains

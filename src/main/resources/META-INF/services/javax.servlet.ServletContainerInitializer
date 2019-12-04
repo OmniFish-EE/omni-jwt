@@ -1,1 +1,1 @@
-fish.payara.microprofile.jwtauth.servlet.RolesDeclarationInitializer
+org.omnifaces.jwt.servlet.RolesDeclarationInitializer

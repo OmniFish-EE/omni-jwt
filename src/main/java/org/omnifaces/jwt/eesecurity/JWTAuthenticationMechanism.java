@@ -37,7 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package fish.payara.microprofile.jwtauth.eesecurity;
+package org.omnifaces.jwt.eesecurity;
 
 import static javax.security.enterprise.identitystore.CredentialValidationResult.Status.VALID;
 
