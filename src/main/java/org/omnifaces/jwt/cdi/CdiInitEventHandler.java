@@ -37,12 +37,12 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+// Portions Copyright 2019 OmniFaces
 package org.omnifaces.jwt.cdi;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toSet;
-import static org.glassfish.soteria.cdi.CdiUtils.getBeanReference;
 
 import java.lang.annotation.Annotation;
 import java.util.Collections;
@@ -57,6 +57,7 @@ import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
+import javax.enterprise.inject.spi.CDI;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.json.JsonArray;
 import javax.json.JsonNumber;
@@ -71,8 +72,6 @@ import org.eclipse.microprofile.auth.LoginConfig;
 import org.eclipse.microprofile.jwt.Claim;
 import org.eclipse.microprofile.jwt.ClaimValue;
 import org.eclipse.microprofile.jwt.JsonWebToken;
-import org.glassfish.soteria.cdi.CdiProducer;
-import org.glassfish.soteria.cdi.CdiUtils;
 import org.omnifaces.jwt.eesecurity.JWTAuthenticationMechanism;
 import org.omnifaces.jwt.eesecurity.SignedJWTIdentityStore;
 import org.omnifaces.jwt.jwt.ClaimAnnotationLiteral;
@@ -91,28 +90,35 @@ public class CdiInitEventHandler {
     private final static JsonWebTokenImpl emptyJsonWebToken = new JsonWebTokenImpl(null, emptyMap());
     
     public static void installAuthenticationMechanism(AfterBeanDiscovery afterBeanDiscovery) {
-      
-        afterBeanDiscovery.addBean(new CdiProducer<IdentityStore>()
+        
+        afterBeanDiscovery.addBean()
                           .scope(ApplicationScoped.class)
                           .beanClass(IdentityStore.class)
                           .types(Object.class, IdentityStore.class, SignedJWTIdentityStore.class)
-                          .addToId("store " + LoginConfig.class)
-                          .create(e-> new SignedJWTIdentityStore()));
+                          .id("store " + LoginConfig.class)
+                          .createWith(e-> new SignedJWTIdentityStore());
       
-        afterBeanDiscovery.addBean(new CdiProducer<HttpAuthenticationMechanism>()
+        afterBeanDiscovery.addBean()
+                          .scope(ApplicationScoped.class)
+                          .beanClass(IdentityStore.class)
+                          .types(Object.class, IdentityStore.class, SignedJWTIdentityStore.class)
+                          .id("store " + LoginConfig.class)
+                          .createWith(e-> new SignedJWTIdentityStore());
+      
+        afterBeanDiscovery.addBean()
                           .scope(ApplicationScoped.class)
                           .beanClass(HttpAuthenticationMechanism.class)
                           .types(Object.class, HttpAuthenticationMechanism.class, JWTAuthenticationMechanism.class)
-                          .addToId("mechanism " + LoginConfig.class)
-                          .create(e-> new JWTAuthenticationMechanism()));
+                          .id("mechanism " + LoginConfig.class)
+                          .createWith(e-> new JWTAuthenticationMechanism());
       
         // MP-JWT 1.0 7.1.1. Injection of JsonWebToken
-        afterBeanDiscovery.addBean(new CdiProducer<JsonWebToken>()
+        afterBeanDiscovery.addBean()
                           .scope(RequestScoped.class)
                           .beanClass(JsonWebToken.class)
                           .types(Object.class, JsonWebToken.class)
-                          .addToId("token " + LoginConfig.class)
-                          .create(e-> getJsonWebToken()));
+                          .id("token " + LoginConfig.class)
+                          .createWith(e-> getJsonWebToken());
       
         // MP-JWT 1.0 7.1.2
         for (JWTInjectableType injectableType : computeTypes()) {
@@ -120,18 +126,18 @@ public class CdiInitEventHandler {
             // Add a new Bean<T>/Dynamic producer for each type that 7.1.2 asks
             // us to support.
           
-            afterBeanDiscovery.addBean(new CdiProducer<Object>()
+            afterBeanDiscovery.addBean()
                               .scope(Dependent.class)
                               .beanClass(CdiInitEventHandler.class)
                               .types(injectableType.getFullType())
                               .qualifiers(new ClaimAnnotationLiteral())
-                              .addToId("claim for " + injectableType.getFullType())
-                              .create(creationalContext -> {
+                              .id("claim for " + injectableType.getFullType())
+                              .createWith(creationalContext -> {
                       
                                   // Get the qualifier from the injection point
                                   Claim claim = getQualifier(
                                                     getCurrentInjectionPoint(
-                                                        CdiUtils.getBeanManager(), 
+                                                        CDI.current().getBeanManager(), 
                                                         creationalContext), Claim.class);
                       
                                   String claimName = getClaimName(claim);
@@ -157,7 +163,7 @@ public class CdiInitEventHandler {
                           
                                   return claimObj;
 
-                              }));
+                              });
         }
     }
 
@@ -226,7 +232,7 @@ public class CdiInitEventHandler {
     }
     
     public static JsonWebTokenImpl getJsonWebToken() {
-        JsonWebTokenImpl jsonWebToken = (JsonWebTokenImpl) getBeanReference(SecurityContext.class).getCallerPrincipal();
+        JsonWebTokenImpl jsonWebToken = (JsonWebTokenImpl) CDI.current().select(SecurityContext.class).get().getCallerPrincipal();
         if (jsonWebToken == null) {
             jsonWebToken = emptyJsonWebToken;
         }

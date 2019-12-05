@@ -37,9 +37,8 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+// Portions Copyright 2019 OmniFaces
 package org.omnifaces.jwt.cdi;
-
-import java.beans.Beans;
 
 import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.spi.InjectionPoint;
@@ -48,7 +47,7 @@ import javax.inject.Inject;
 /**
  * Dummy class used to take the injection point for "InjectionPoint" of, for usage in the
  * implementation of
- * {@link Beans#getCurrentInjectionPoint(javax.enterprise.context.spi.CreationalContext)}.
+ * <code>BeanManager#getCurrentInjectionPoint(javax.enterprise.context.spi.CreationalContext)</code>.
  * <p>
  * The actual injectionPoint being injected is not used.
  *

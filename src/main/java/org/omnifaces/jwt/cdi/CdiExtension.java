@@ -37,6 +37,7 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+// Portions Copyright 2019 OmniFaces
 package org.omnifaces.jwt.cdi;
 
 import java.lang.annotation.Annotation;
@@ -97,6 +98,10 @@ public class CdiExtension implements Extension {
     /**
      * This method tries to find the LoginConfig annotation and if does flags that fact.
      * 
+     * @param eventIn The ProcessBean event
+     * @param beanManager The current bean manager
+     * @param <T> The class of the bean
+     * 
      */
     public <T> void findLoginConfigAnnotation(@Observes ProcessBean<T> eventIn, BeanManager beanManager) {
         
@@ -111,6 +116,10 @@ public class CdiExtension implements Extension {
     /**
      * Find all the roles used by the <code>@RolesAllowed</code> annotation, so these can be programmatically
      * declared later on. 
+     * 
+     * @param eventIn The ProcessManagedBean event
+     * @param beanManager The current bean manager
+     * @param <T> The class of the bean
      * 
      */
     public <T> void findRoles(@Observes ProcessManagedBean<T> eventIn, BeanManager beanManager) {
