@@ -37,21 +37,16 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
+// Portions Copyright 2019 OmniFaces
 package org.omnifaces.jwt.eesecurity;
 
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.omnifaces.jwt.jwt.JsonWebTokenImpl;
-import org.omnifaces.jwt.jwt.JwtTokenParser;
+import static java.lang.Thread.currentThread;
+import static java.util.logging.Level.FINEST;
+import static javax.security.enterprise.identitystore.CredentialValidationResult.INVALID_RESULT;
+import static org.eclipse.microprofile.jwt.config.Names.ISSUER;
+import static org.eclipse.microprofile.jwt.config.Names.VERIFIER_PUBLIC_KEY;
+import static org.eclipse.microprofile.jwt.config.Names.VERIFIER_PUBLIC_KEY_LOCATION;
 
-import javax.enterprise.inject.spi.DeploymentException;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
-import javax.security.enterprise.identitystore.CredentialValidationResult;
-import javax.security.enterprise.identitystore.IdentityStore;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,13 +58,28 @@ import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.RSAPublicKeySpec;
 import java.security.spec.X509EncodedKeySpec;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Properties;
 import java.util.logging.Logger;
 
-import static java.lang.Thread.currentThread;
-import static java.util.logging.Level.FINEST;
-import static javax.security.enterprise.identitystore.CredentialValidationResult.INVALID_RESULT;
-import static org.eclipse.microprofile.jwt.config.Names.*;
+import javax.enterprise.inject.spi.DeploymentException;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonValue;
+import javax.security.enterprise.identitystore.CredentialValidationResult;
+import javax.security.enterprise.identitystore.IdentityStore;
+
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.omnifaces.jwt.jwt.JsonWebTokenImpl;
+import org.omnifaces.jwt.jwt.JwtTokenParser;
 
 /**
  * Identity store capable of asserting that a signed JWT token is valid
@@ -107,10 +117,7 @@ public class SignedJWTIdentityStore implements IdentityStore {
             jwtTokenParser.parse(signedJWTCredential.getSignedJWT());
             String keyID = jwtTokenParser.getKeyID();
 
-            Optional<PublicKey> publicKey = readDefaultPublicKey();
-            if (!publicKey.isPresent()) {
-                publicKey = readMPEmbeddedPublicKey(keyID);
-            }
+            Optional<PublicKey> publicKey = readMPEmbeddedPublicKey(keyID);
             if (!publicKey.isPresent()) {
                 publicKey = readMPPublicKeyFromLocation(keyID);
             }
@@ -159,10 +166,6 @@ public class SignedJWTIdentityStore implements IdentityStore {
 
     private Optional<String> readCustomNamespace(Optional<Properties> properties) {
         return properties.isPresent() ? Optional.ofNullable(properties.get().getProperty("custom.namespace", null)) : Optional.empty();
-    }
-
-    private Optional<PublicKey> readDefaultPublicKey() throws Exception {
-        return readPublicKeyFromLocation("/publicKey.pem", null);
     }
 
     private Optional<PublicKey> readMPEmbeddedPublicKey(String keyID) throws Exception {
