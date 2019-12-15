@@ -1,7 +1,7 @@
 # OmniFaces JWT
 JWT implementation for [Jakarta EE](https://jakarta.ee)
 
-OmniFaces JWT is an implementation of [MicroProfile JWT AUTH](https://microprofile.io/project/eclipse/microprofile-jwt-auth), but not yet certified for compatibility. 
+OmniFaces JWT is a [compatible implementation](https://wiki.eclipse.org/MicroProfile/Implementation#MP_JWT_implementations) of [MicroProfile JWT AUTH](https://microprofile.io/project/eclipse/microprofile-jwt-auth) 1.1.
 
 It is derived from [Payara's implementation](https://github.com/payara/Payara/tree/master/appserver/payara-appserver-modules/microprofile/jwt-auth).
 
