@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2017 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) [2021] Payara Foundation and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,47 +37,26 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.omnifaces.jwt.cdi;
-
-import static java.util.Arrays.asList;
-
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+package org.omnifaces.jwt.eesecurity;
 
 /**
- * Minimal implementation of ParameterizedType, to programmatically represent
- * the generic list.
- *
- * @author Arjan Tijms
+ * Exception during processing of JWT.
  */
-public class ParameterizedTypeImpl implements ParameterizedType {
+public class JWTProcessingException extends Exception {
 
-    private final Type rawType;
-    private final Type[] actualTypeArguments;
-
-    public ParameterizedTypeImpl(Type rawType, Type... actualTypeArguments) {
-        this.rawType = rawType;
-        this.actualTypeArguments = actualTypeArguments;
+    public JWTProcessingException() {
     }
 
-    @Override
-    public Type getRawType() {
-        return rawType;
+    public JWTProcessingException(String message) {
+        super(message);
     }
 
-    @Override
-    public Type[] getActualTypeArguments() {
-        return actualTypeArguments;
+    public JWTProcessingException(String message, Throwable cause) {
+        super(message, cause);
     }
 
-    @Override
-    public Type getOwnerType() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return "ParameterizedTypeImpl (" + rawType + ") - " + asList(actualTypeArguments) + " *";
+    public JWTProcessingException(Throwable cause) {
+        super(cause);
     }
 
 }

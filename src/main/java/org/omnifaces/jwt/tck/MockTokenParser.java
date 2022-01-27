@@ -58,8 +58,9 @@ public class MockTokenParser {
 
     public JsonWebToken parse(String bearerToken, String issuer, PublicKey signedBy) throws Exception {
         try {
-            jwtTokenParser.parse(bearerToken);
-            return jwtTokenParser.verify(issuer, signedBy);
+//            jwtTokenParser.parse(bearerToken);
+//            return jwtTokenParser.verify(issuer, signedBy);
+            return null;
         } catch (Exception e) {
             throw new IllegalStateException("", e);
         }

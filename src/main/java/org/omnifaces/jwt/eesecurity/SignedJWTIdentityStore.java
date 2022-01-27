@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2017-2019 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) [2017-2021] Payara Foundation and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,53 +37,35 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-// Portions Copyright 2019 OmniFaces
 package org.omnifaces.jwt.eesecurity;
 
-import static java.lang.Thread.currentThread;
-import static java.util.logging.Level.FINEST;
-import static javax.security.enterprise.identitystore.CredentialValidationResult.INVALID_RESULT;
-import static org.eclipse.microprofile.jwt.config.Names.ISSUER;
-import static org.eclipse.microprofile.jwt.config.Names.VERIFIER_PUBLIC_KEY;
-import static org.eclipse.microprofile.jwt.config.Names.VERIFIER_PUBLIC_KEY_LOCATION;
-
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.math.BigInteger;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.security.KeyFactory;
-import java.security.PublicKey;
-import java.security.spec.RSAPublicKeySpec;
-import java.security.spec.X509EncodedKeySpec;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Properties;
-import java.util.logging.Logger;
-
-import javax.enterprise.inject.spi.DeploymentException;
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
-import javax.security.enterprise.identitystore.CredentialValidationResult;
-import javax.security.enterprise.identitystore.IdentityStore;
-
-import org.eclipse.microprofile.config.Config;
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.omnifaces.jwt.jwt.JsonWebTokenImpl;
 import org.omnifaces.jwt.jwt.JwtTokenParser;
+import java.io.IOException;
+import static java.lang.Thread.currentThread;
+import java.net.URL;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.Set;
+import static java.util.logging.Level.INFO;
+import java.util.logging.Logger;
+
+import jakarta.security.enterprise.identitystore.CredentialValidationResult;
+import static jakarta.security.enterprise.identitystore.CredentialValidationResult.INVALID_RESULT;
+import jakarta.security.enterprise.identitystore.IdentityStore;
+import org.eclipse.microprofile.config.Config;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.jwt.config.Names;
+import static org.eclipse.microprofile.jwt.config.Names.ISSUER;
 
 /**
  * Identity store capable of asserting that a signed JWT token is valid
- * according to the MP-JWT 1.0 spec.
+ * according to the MP-JWT 2.0 spec.
  *
  * @author Arjan Tijms
  */
@@ -91,13 +73,17 @@ public class SignedJWTIdentityStore implements IdentityStore {
 
     private static final Logger LOGGER = Logger.getLogger(SignedJWTIdentityStore.class.getName());
 
-    private static final String RSA_ALGORITHM = "RSA";
-
     private final String acceptedIssuer;
+    private final Optional<List<String>> allowedAudience;
     private final Optional<Boolean> enabledNamespace;
     private final Optional<String> customNamespace;
+    private final Optional<Boolean> disableTypeVerification;
 
     private final Config config;
+    private final JwtPublicKeyStore publicKeyStore;
+    private final JwtPrivateKeyStore privateKeyStore;
+
+    private final boolean isEncryptionRequired;
 
     public SignedJWTIdentityStore() {
         config = ConfigProvider.getConfig();
@@ -106,43 +92,57 @@ public class SignedJWTIdentityStore implements IdentityStore {
         acceptedIssuer = readVendorIssuer(properties)
                 .orElseGet(() -> config.getOptionalValue(ISSUER, String.class)
                 .orElseThrow(() -> new IllegalStateException("No issuer found")));
+        Optional<String> allowedAudienceOpt = readAudience(properties);
+        if (!allowedAudienceOpt.isPresent()) {
+            allowedAudienceOpt = config.getOptionalValue(Names.AUDIENCES, String.class);
+        }
+        allowedAudience = allowedAudienceOpt.map(str -> Arrays.asList(str.split(",")));
 
         enabledNamespace = readEnabledNamespace(properties);
         customNamespace = readCustomNamespace(properties);
+        disableTypeVerification = readDisableTypeVerification(properties);
+        Optional<String> publicKeyLocation = readConfigOptional(Names.VERIFIER_PUBLIC_KEY_LOCATION, properties, config); //mp.jwt.verifyAndParseEncryptedJWT.publickey.location
+        Optional<String> publicKey = readConfigOptional(Names.VERIFIER_PUBLIC_KEY, properties, config); //mp.jwt.verifyAndParseEncryptedJWT.publickey
+        Optional<String> decryptKeyLocation = readConfigOptional(Names.DECRYPTOR_KEY_LOCATION, properties, config); //mp.jwt.decrypt.key.location
+        publicKeyStore = new JwtPublicKeyStore(readPublicKeyCacheTTL(properties), publicKeyLocation);
+        privateKeyStore = new JwtPrivateKeyStore(readPublicKeyCacheTTL(properties), decryptKeyLocation);
+
+        // Signing is required by default, it doesn't parse if not signed
+        isEncryptionRequired = decryptKeyLocation.isPresent();
     }
 
     public CredentialValidationResult validate(SignedJWTCredential signedJWTCredential) {
-        final JwtTokenParser jwtTokenParser = new JwtTokenParser(enabledNamespace, customNamespace);
+        final JwtTokenParser jwtTokenParser = new JwtTokenParser(enabledNamespace, customNamespace, disableTypeVerification);
         try {
-            jwtTokenParser.parse(signedJWTCredential.getSignedJWT());
-            String keyID = jwtTokenParser.getKeyID();
+            JsonWebTokenImpl jsonWebToken = jwtTokenParser.parse(signedJWTCredential.getSignedJWT(),
+                    isEncryptionRequired, publicKeyStore, acceptedIssuer, privateKeyStore);
 
-            Optional<PublicKey> publicKey = readMPEmbeddedPublicKey(keyID);
-            if (!publicKey.isPresent()) {
-                publicKey = readMPPublicKeyFromLocation(keyID);
+            // verifyAndParseEncryptedJWT audience
+            final Set<String> recipientsOfThisJWT = jsonWebToken.getAudience();
+            // find if any recipient is in the allowed audience
+            Boolean recipientInAudience = allowedAudience
+                    .map(recipient -> recipient.stream().anyMatch(a -> recipientsOfThisJWT != null && recipientsOfThisJWT.contains(a)))
+                    .orElse(true);
+            if (!recipientInAudience) {
+                throw new Exception("The intended audience " + recipientsOfThisJWT + " is not a part of allowed audience.");
             }
-            if (!publicKey.isPresent()) {
-                throw new IllegalStateException("No PublicKey found");
+
+            Set<String> groups = new HashSet<>();
+            Collection<String> groupClaims = jsonWebToken.getClaim("groups");
+            if (groupClaims != null) {
+                groups.addAll(groupClaims);
             }
 
-            JsonWebTokenImpl jsonWebToken
-                    = jwtTokenParser.verify(acceptedIssuer, publicKey.get());
-
-            List<String> groups = new ArrayList<>(
-                    jsonWebToken.getClaim("groups"));
-
-            return new CredentialValidationResult(
-                    jsonWebToken,
-                    new HashSet<>(groups));
+            return new CredentialValidationResult(jsonWebToken, groups);
 
         } catch (Exception e) {
-            LOGGER.log(FINEST, "Exception trying to parse JWT token.", e);
+            LOGGER.log(INFO, "Exception trying to parse JWT token.", e);
         }
 
         return INVALID_RESULT;
     }
 
-    private Optional<Properties> readVendorProperties() {
+    public static Optional<Properties> readVendorProperties() {
         URL mpJwtResource = currentThread().getContextClassLoader().getResource("/payara-mp-jwt.properties");
         Properties properties = null;
         if (mpJwtResource != null) {
@@ -168,120 +168,35 @@ public class SignedJWTIdentityStore implements IdentityStore {
         return properties.isPresent() ? Optional.ofNullable(properties.get().getProperty("custom.namespace", null)) : Optional.empty();
     }
 
-    private Optional<PublicKey> readMPEmbeddedPublicKey(String keyID) throws Exception {
-        Optional<String> key = config.getOptionalValue(VERIFIER_PUBLIC_KEY, String.class);
-        if (!key.isPresent()) {
-            return Optional.empty();
-        }
-        return createPublicKey(key.get(), keyID);
+    private Optional<Boolean> readDisableTypeVerification(Optional<Properties> properties) {
+        return properties.isPresent() ? Optional.ofNullable(Boolean.valueOf(properties.get().getProperty("disable.type.verification", "false"))) : Optional.empty();
     }
 
-    private Optional<PublicKey> readMPPublicKeyFromLocation(String keyID) throws Exception {
-        Optional<String> locationOpt = config.getOptionalValue(VERIFIER_PUBLIC_KEY_LOCATION, String.class);
-
-        if (!locationOpt.isPresent()) {
-            return Optional.empty();
-        }
-
-        String publicKeyLocation = locationOpt.get();
-
-        return readPublicKeyFromLocation(publicKeyLocation, keyID);
+    private Duration readPublicKeyCacheTTL(Optional<Properties> properties) {
+        return properties
+        		.map(props -> props.getProperty("publicKey.cache.ttl"))
+        		.map(Long::valueOf)
+        		.map(Duration::ofMillis)
+        		.orElseGet( () -> Duration.ofMinutes(5));
     }
 
-    private Optional<PublicKey> readPublicKeyFromLocation(String publicKeyLocation, String keyID) throws Exception {
-
-        URL publicKeyURL = currentThread().getContextClassLoader().getResource(publicKeyLocation);
-
-        if (publicKeyURL == null) {
-            try {
-                publicKeyURL = new URL(publicKeyLocation);
-            } catch (MalformedURLException ex) {
-                publicKeyURL = null;
-            }
-        }
-        if (publicKeyURL == null) {
-            return Optional.empty();
-        }
-
-        byte[] byteBuffer = new byte[16384];
-        try (InputStream inputStream = publicKeyURL.openStream()) {
-            String key = new String(byteBuffer, 0, inputStream.read(byteBuffer));
-            return createPublicKey(key, keyID);
-        }
+    private Optional<String> readAudience(Optional<Properties> properties) {
+        return properties.isPresent() ? Optional.ofNullable(properties.get().getProperty(Names.AUDIENCES)) : Optional.empty();
     }
 
-    private Optional<PublicKey> createPublicKey(String key, String keyID) throws Exception {
-        try {
-            return Optional.of(createPublicKeyFromPem(key));
-        } catch (Exception pemEx) {
-            try {
-                return Optional.of(createPublicKeyFromJWKS(key, keyID));
-            } catch (Exception jwksEx) {
-                throw new DeploymentException(jwksEx);
-            }
+    /**
+     * Read configuration from Vendor or server or return default value.
+     */
+    public static String readConfig(String key, Optional<Properties> properties, Config config, String defaultValue) {
+        Optional<String> valueOpt = readConfigOptional(key, properties, config);
+        return valueOpt.orElse(defaultValue);
+    }
+
+    public static Optional<String> readConfigOptional(String key, Optional<Properties> properties, Config config) {
+        Optional<String> valueOpt = properties.map(props -> props.getProperty(key));
+        if (!valueOpt.isPresent()) {
+            valueOpt = config.getOptionalValue(key, String.class);
         }
+        return valueOpt;
     }
-
-    private PublicKey createPublicKeyFromPem(String key) throws Exception {
-        key = key.replaceAll("-----BEGIN (.*)-----", "")
-                .replaceAll("-----END (.*)----", "")
-                .replaceAll("\r\n", "")
-                .replaceAll("\n", "")
-                .trim();
-
-        byte[] keyBytes = Base64.getDecoder().decode(key);
-        X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(keyBytes);
-        return KeyFactory.getInstance(RSA_ALGORITHM)
-                .generatePublic(publicKeySpec);
-
-    }
-
-    private PublicKey createPublicKeyFromJWKS(String jwksValue, String keyID) throws Exception {
-        JsonObject jwks = parseJwks(jwksValue);
-        JsonArray keys = jwks.getJsonArray("keys");
-        JsonObject jwk = keys != null ? findJwk(keys, keyID) : jwks;
-
-        // the public exponent
-        byte[] exponentBytes = Base64.getUrlDecoder().decode(jwk.getString("e"));
-        BigInteger exponent = new BigInteger(1, exponentBytes);
-
-        // the modulus
-        byte[] modulusBytes = Base64.getUrlDecoder().decode(jwk.getString("n"));
-        BigInteger modulus = new BigInteger(1, modulusBytes);
-
-        RSAPublicKeySpec publicKeySpec = new RSAPublicKeySpec(modulus, exponent);
-        return KeyFactory.getInstance(RSA_ALGORITHM)
-                .generatePublic(publicKeySpec);
-    }
-
-    private JsonObject parseJwks(String jwksValue) throws Exception {
-        JsonObject jwks;
-        try (JsonReader reader = Json.createReader(new StringReader(jwksValue))) {
-            jwks = reader.readObject();
-        } catch (Exception ex) {
-            // if jwks is encoded
-            byte[] jwksDecodedValue = Base64.getDecoder().decode(jwksValue);
-            try (InputStream jwksStream = new ByteArrayInputStream(jwksDecodedValue);
-                    JsonReader reader = Json.createReader(jwksStream)) {
-                jwks = reader.readObject();
-            }
-        }
-        return jwks;
-    }
-
-    private JsonObject findJwk(JsonArray keys, String keyID) {
-        if (Objects.isNull(keyID) && keys.size() > 0) {
-            return keys.getJsonObject(0);
-        }
-
-        for (JsonValue value : keys) {
-            JsonObject jwk = value.asJsonObject();
-            if (Objects.equals(keyID, jwk.getString("kid"))) {
-                return jwk;
-            }
-        }
-
-        throw new IllegalStateException("No matching JWK for KeyID.");
-    }
-
 }

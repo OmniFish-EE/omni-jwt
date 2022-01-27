@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2017 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017-2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,47 +37,43 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.omnifaces.jwt.cdi;
 
-import static java.util.Arrays.asList;
+package org.omnifaces.jwt.eesecurity;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.time.Duration;
+import java.util.Optional;
+import java.util.function.Supplier;
 
-/**
- * Minimal implementation of ParameterizedType, to programmatically represent
- * the generic list.
- *
- * @author Arjan Tijms
- */
-public class ParameterizedTypeImpl implements ParameterizedType {
+public class KeyLoadingCache {
 
-    private final Type rawType;
-    private final Type[] actualTypeArguments;
+    private final Supplier<CacheableString> keySupplier;
+    private Duration ttl;
+    private long lastUpdated;
+    private Optional<String> key;
 
-    public ParameterizedTypeImpl(Type rawType, Type... actualTypeArguments) {
-        this.rawType = rawType;
-        this.actualTypeArguments = actualTypeArguments;
+
+    public KeyLoadingCache(Supplier<CacheableString> keySupplier) {
+        this.ttl = Duration.ZERO;
+        this.keySupplier = keySupplier;
     }
 
-    @Override
-    public Type getRawType() {
-        return rawType;
+    public Optional<String> get() {
+        long now = System.currentTimeMillis();
+        if (now - lastUpdated > ttl.toMillis()) {
+            refresh();
+        }
+
+        return key;
     }
 
-    @Override
-    public Type[] getActualTypeArguments() {
-        return actualTypeArguments;
-    }
-
-    @Override
-    public Type getOwnerType() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return "ParameterizedTypeImpl (" + rawType + ") - " + asList(actualTypeArguments) + " *";
+    private synchronized void refresh() {
+        long now = System.currentTimeMillis();
+        if (now - lastUpdated > ttl.toMillis()) {
+            CacheableString result = keySupplier.get();
+            key = result.getValue();
+            ttl = result.getCacheTTL();
+            lastUpdated = now;
+        }
     }
 
 }
