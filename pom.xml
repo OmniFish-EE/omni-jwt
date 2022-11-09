@@ -90,11 +90,9 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
 
-        <jakartaee.api.version>9.1.0</jakartaee.api.version>
-        <nimbus-jose-jwt.version>9.15.2</nimbus-jose-jwt.version>
+        <nimbus-jose-jwt.version>9.25.6</nimbus-jose-jwt.version>
         <accessors-smart.version>2.4.7</accessors-smart.version>
         <microprofile-jwt-auth.version>2.0</microprofile-jwt-auth.version>
-        <microprofile-config.version>3.0.1</microprofile-config.version>
     </properties>
 
     <dependencies>
@@ -108,60 +106,49 @@
         <dependency>
             <groupId>org.eclipse.microprofile.config</groupId>
             <artifactId>microprofile-config-api</artifactId>
-            <version>${microprofile-config.version}</version>
+            <version>3.0.2</version>
             <scope>provided</scope>
         </dependency>
         
         <dependency>
             <groupId>jakarta.security.enterprise</groupId>
             <artifactId>jakarta.security.enterprise-api</artifactId>
-            <version>2.0.0</version>
+            <version>3.0.0</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>jakarta.enterprise</groupId>
             <artifactId>jakarta.enterprise.cdi-api</artifactId>
-            <version>3.0.0</version>
+            <version>4.0.1</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
-            <version>3.0.0</version>
+            <version>3.1.0</version>
             <scope>provided</scope>
         </dependency>
         
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
-            <version>5.0.0</version>
+            <version>6.0.0</version>
             <scope>provided</scope>
         </dependency>
         
         <dependency>
             <groupId>jakarta.json</groupId>
             <artifactId>jakarta.json-api</artifactId>
-            <version>2.0.1</version>
+            <version>2.1.1</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>${nimbus-jose-jwt.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>net.minidev</groupId>
-                    <artifactId>accessors-smart</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>net.minidev</groupId>
-            <artifactId>accessors-smart</artifactId>
-            <version>${accessors-smart.version}</version>
+            <version>9.23</version>
         </dependency>
     </dependencies>
     
@@ -202,7 +189,57 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.9.0</version>
+                <version>3.10.1</version>
+            </plugin>
+            
+            <!-- Creates the OSGi MANIFEST.MF file -->
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>5.1.8</version>
+                <configuration>
+                    <instructions>
+                        <_noimportjava>true</_noimportjava>
+                        <_runee>JavaSE-11</_runee>
+                        
+                        <Automatic-Module-Name>org.omnifaces.jwt</Automatic-Module-Name>
+                        <Extension-Name>org.omnifaces.jwt</Extension-Name>
+                        <Bundle-SymbolicName>org.omnifaces.jwt</Bundle-SymbolicName>
+                        <Bundle-Version>${project.version}</Bundle-Version>
+                        <Bundle-Name>OmniFaces JWT MicroProfile JWT Implementation ${project.version}</Bundle-Name>
+                        <Bundle-Description>MicroProfile JWT Implementation ${project.version}</Bundle-Description>  
+                        
+                        <Specification-Title>MicroProfile JWT</Specification-Title>
+                        <Specification-Version>${microprofile-jwt-auth.version}</Specification-Version>
+                        <Specification-Vendor>Eclipse Foundation</Specification-Vendor>
+                            
+                        <Implementation-Version>${project.version}</Implementation-Version>
+                        <Implementation-Vendor>OmniFaces</Implementation-Vendor>
+                    </instructions>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>bundle-manifest</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            
+            <!-- Adds the manifest file created by the org.apache.felix:maven-bundle-plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.2</version>
+                <configuration>
+                    <archive>
+                        <manifestFile>
+                            ${project.build.outputDirectory}/META-INF/MANIFEST.MF
+                        </manifestFile>
+                    </archive>
+                </configuration>
             </plugin>
 
             <!-- Configure the jar with the sources. -->
@@ -224,7 +261,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.1</version>
+                <version>3.4.1</version>
                 <configuration>
                     <javadocVersion>${javadoc.version}</javadocVersion>
                     <detectJavaApiLink>false</detectJavaApiLink>
@@ -250,23 +287,13 @@
                 </executions>
             </plugin>
 
-            <plugin>
-                <groupId>org.apache.felix</groupId>
-                <artifactId>maven-bundle-plugin</artifactId>
-                <version>5.1.4</version>
-                <configuration>
-                    <instructions>
-                        <Specification-Version>${microprofile-jwt-auth.version}</Specification-Version>
-                        <Implementation-Version>${project.version}</Implementation-Version>
-                    </instructions>
-                </configuration>
-            </plugin>
+            
 
             <!-- Configure snapshot deployment to Sonatype. -->
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.8</version>
+                <version>1.6.13</version>
                 <extensions>true</extensions>
                 <configuration>
                     <serverId>ossrh</serverId>
@@ -288,7 +315,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
+                        <version>3.0.1</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
