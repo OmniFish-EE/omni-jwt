@@ -88,7 +88,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.compiler.release>11</maven.compiler.release>
 
-        <microprofile-jwt-auth.version>2.0</microprofile-jwt-auth.version>
+        <microprofile-jwt-auth.version>2.1</microprofile-jwt-auth.version>
     </properties>
 
     <dependencies>
@@ -144,7 +144,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>9.31</version>
+            <version>9.23</version>
         </dependency>
     </dependencies>
     
