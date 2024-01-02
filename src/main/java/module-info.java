@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) [2022-2022] OmniFaces and/or its affiliates. All rights reserved.
+ * Copyright (c) [2022-2024] OmniFaces and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -62,9 +62,6 @@ module org.omnifaces.jwt {
     exports org.omnifaces.jwt.jaxrs;
     exports org.omnifaces.jwt.jwt;
     exports org.omnifaces.jwt.servlet;
-
-    // This is needed for CDI extensions that use non-public observer methods
-    opens org.omnifaces.jwt.cdi to weld.core.impl;
 
     provides jakarta.enterprise.inject.spi.Extension with org.omnifaces.jwt.cdi.CdiExtension;
     provides jakarta.servlet.ServletContainerInitializer with org.omnifaces.jwt.servlet.RolesDeclarationInitializer;
