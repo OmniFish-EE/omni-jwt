@@ -45,7 +45,7 @@
 
     <groupId>org.omnifaces</groupId>
     <artifactId>microprofile-jwt-auth</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1-SNAPSHOT</version>
 
     <name>Microprofile - JWT</name>
     <description>Implementation of MicroProfile Interoperable JWT RBAC API</description>
