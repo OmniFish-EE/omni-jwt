@@ -44,7 +44,7 @@
 
     <groupId>org.omnifaces</groupId>
     <artifactId>microprofile-jwt-auth</artifactId>
-    <version>2.0.3-SNAPSHOT</version>
+    <version>2.0.3</version>
 
     <name>Microprofile - JWT</name>
     <description>Implementation of MicroProfile Interoperable JWT RBAC API</description>
@@ -310,6 +310,13 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <plugin>
+                        <artifactId>maven-deploy-plugin</artifactId>
+                        <version>3.1.4</version>
+                        <configuration>
+                            <deployAtEnd>true</deployAtEnd>
+                        </configuration>
+                    </plugin>
                     <!-- Signing with GPG is a requirement for a release deployment to Maven central. -->
                     <plugin>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -328,6 +335,12 @@
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
                         <version>0.8.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <deploymentName>Omni JWT ${project.version}</deploymentName>
+                            <publishingServerId>central</publishingServerId>
+                            <excludeArtifacts>integration-tests</excludeArtifacts>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
