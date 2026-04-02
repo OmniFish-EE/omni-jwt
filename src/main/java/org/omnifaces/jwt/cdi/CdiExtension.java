@@ -40,20 +40,9 @@
 // Portions Copyright 2019, 2020 OmniFaces
 package org.omnifaces.jwt.cdi;
 
-import org.omnifaces.jwt.eesecurity.JWTAuthenticationMechanism;
-import org.omnifaces.jwt.eesecurity.SignedJWTIdentityStore;
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import jakarta.annotation.security.RolesAllowed;
-import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.context.SessionScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
-import jakarta.enterprise.inject.spi.Annotated;
 import jakarta.enterprise.inject.spi.Bean;
 import jakarta.enterprise.inject.spi.BeanManager;
 import jakarta.enterprise.inject.spi.BeforeBeanDiscovery;
@@ -62,12 +51,16 @@ import jakarta.enterprise.inject.spi.Extension;
 import jakarta.enterprise.inject.spi.InjectionPoint;
 import jakarta.enterprise.inject.spi.ProcessBean;
 import jakarta.enterprise.inject.spi.ProcessInjectionTarget;
-import jakarta.enterprise.inject.spi.ProcessManagedBean;
-import jakarta.enterprise.inject.spi.ProcessSessionBean;
+
+import java.lang.annotation.Annotation;
+
 import org.eclipse.microprofile.auth.LoginConfig;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.jwt.Claim;
+import org.omnifaces.jwt.eesecurity.JWTAuthenticationMechanism;
+import org.omnifaces.jwt.eesecurity.SignedJWTIdentityStore;
+
 import static org.eclipse.microprofile.jwt.Claims.UNKNOWN;
 import static org.eclipse.microprofile.jwt.config.Names.VERIFIER_PUBLIC_KEY;
 import static org.eclipse.microprofile.jwt.config.Names.VERIFIER_PUBLIC_KEY_LOCATION;
@@ -88,7 +81,6 @@ public class CdiExtension implements Extension {
      * a mechanism needs to be installed.
      */
     private boolean addJWTAuthenticationMechanism;
-    private final Set<String> roles = new HashSet<>();
 
     public void register(@Observes BeforeBeanDiscovery beforeBean, BeanManager beanManager) {
         beforeBean.addAnnotatedType(beanManager.createAnnotatedType(InjectionPointGenerator.class), "JWT InjectionPointGenerator ");
@@ -106,32 +98,6 @@ public class CdiExtension implements Extension {
         if (loginConfig != null && loginConfig.authMethod().equals("MP-JWT")) {
             addJWTAuthenticationMechanism = true;
         }
-    }
-
-    /**
-     * Find all the roles used by the <code>@RolesAllowed</code> annotation, so these can be programmatically
-     * declared later on.
-     *
-     */
-    public <T> void findRoles(@Observes ProcessManagedBean<T> eventIn, BeanManager beanManager) {
-
-        ProcessManagedBean<T> event = eventIn; // JDK8 u60 workaround
-
-        if (event instanceof ProcessSessionBean) {
-            // @RolesAllowed on session beans is already handled
-            return;
-        }
-
-        List<Annotated> annotatedElements = new ArrayList<>(event.getAnnotatedBeanClass().getMethods());
-        annotatedElements.add(event.getAnnotatedBeanClass());
-
-        for (Annotated annotated : annotatedElements) {
-            RolesAllowed rolesAllowed = annotated.getAnnotation(RolesAllowed.class);
-            if (rolesAllowed != null) {
-                roles.addAll(Arrays.asList(rolesAllowed.value()));
-            }
-        }
-
     }
 
     public <T> void checkInjectIntoRightScope(@Observes ProcessInjectionTarget<T> eventIn, BeanManager beanManager) {
@@ -182,10 +148,6 @@ public class CdiExtension implements Extension {
                     "Both properties mp.jwt.verify.publickey and mp.jwt.verify.publickey.location must not be defined"
             );
         }
-    }
-
-    public Set<String> getRoles() {
-        return roles;
     }
 
     public boolean isAddJWTAuthenticationMechanism() {
