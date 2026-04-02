@@ -60,8 +60,6 @@ module org.omnifaces.jwt {
     exports org.omnifaces.jwt.cdi;
     exports org.omnifaces.jwt.eesecurity;
     exports org.omnifaces.jwt.jwt;
-    exports org.omnifaces.jwt.servlet;
 
     provides jakarta.enterprise.inject.spi.Extension with org.omnifaces.jwt.cdi.CdiExtension;
-    provides jakarta.servlet.ServletContainerInitializer with org.omnifaces.jwt.servlet.RolesDeclarationInitializer;
 }
