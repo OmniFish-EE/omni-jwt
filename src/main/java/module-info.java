@@ -56,10 +56,10 @@ module org.omnifaces.jwt {
     requires microprofile.jwt.auth.api;
     requires jakarta.ws.rs;
     requires com.nimbusds.jose.jwt;
+    requires org.glassfish.soteria;
 
-    exports org.omnifaces.jwt.cdi;
-    exports org.omnifaces.jwt.eesecurity;
-    exports org.omnifaces.jwt.jwt;
+    exports org.omnifaces.jwt.mp.cdi;
+    exports org.omnifaces.jwt.mp.jwt;
 
-    provides jakarta.enterprise.inject.spi.Extension with org.omnifaces.jwt.cdi.CdiExtension;
+    provides jakarta.enterprise.inject.spi.Extension with org.omnifaces.jwt.mp.cdi.CdiExtension;
 }

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2017 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017-2021 Payara Foundation and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,47 +37,33 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.omnifaces.jwt.cdi;
+package org.omnifaces.jwt.mp.jwt;
 
-import static java.util.Arrays.asList;
+import static org.eclipse.microprofile.jwt.Claims.UNKNOWN;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import jakarta.enterprise.util.AnnotationLiteral;
+
+import org.eclipse.microprofile.jwt.Claim;
+import org.eclipse.microprofile.jwt.Claims;
 
 /**
- * Minimal implementation of ParameterizedType, to programmatically represent
- * the generic list.
- *
+ * An annotation literal for Claim.
+ * 
  * @author Arjan Tijms
  */
-public class ParameterizedTypeImpl implements ParameterizedType {
+@SuppressWarnings("all")
+public class ClaimAnnotationLiteral extends AnnotationLiteral<Claim> implements Claim {
+    
+    private static final long serialVersionUID = 1L;
 
-    private final Type rawType;
-    private final Type[] actualTypeArguments;
-
-    public ParameterizedTypeImpl(Type rawType, Type... actualTypeArguments) {
-        this.rawType = rawType;
-        this.actualTypeArguments = actualTypeArguments;
+    @Override
+    public String value() {
+        return "";
     }
 
     @Override
-    public Type getRawType() {
-        return rawType;
+    public Claims standard() {
+        return UNKNOWN;
     }
-
-    @Override
-    public Type[] getActualTypeArguments() {
-        return actualTypeArguments;
-    }
-
-    @Override
-    public Type getOwnerType() {
-        return null;
-    }
-
-    @Override
-    public String toString() {
-        return "ParameterizedTypeImpl (" + rawType + ") - " + asList(actualTypeArguments) + " *";
-    }
-
+    
 }

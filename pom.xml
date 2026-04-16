@@ -148,6 +148,12 @@
             <version>2.1.3</version>
             <scope>provided</scope>
         </dependency>
+        
+        <dependency>
+            <groupId>org.glassfish.soteria</groupId>
+            <artifactId>soteria</artifactId>
+            <version>5.0.0-SNAPSHOT</version>
+        </dependency>
 
         <dependency>
             <groupId>com.nimbusds</groupId>
