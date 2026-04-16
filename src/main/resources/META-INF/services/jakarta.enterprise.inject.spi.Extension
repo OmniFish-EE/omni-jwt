@@ -1,2 +1,2 @@
-org.omnifaces.jwt.cdi.CdiExtension
+org.omnifaces.jwt.mp.cdi.CdiExtension
 

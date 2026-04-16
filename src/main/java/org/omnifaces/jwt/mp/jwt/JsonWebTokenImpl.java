@@ -37,56 +37,53 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.omnifaces.jwt.jwt;
+package org.omnifaces.jwt.mp.jwt;
 
-import static java.util.Collections.singleton;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import static java.util.stream.Collectors.toSet;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonNumber;
 import jakarta.json.JsonString;
 import jakarta.json.JsonValue;
-import jakarta.security.enterprise.CallerPrincipal;
+
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
 import org.eclipse.microprofile.jwt.Claims;
 import org.eclipse.microprofile.jwt.JsonWebToken;
 
+import static java.util.Collections.singleton;
+import static java.util.stream.Collectors.toSet;
+
 /**
  * A default implementation of {@link JsonWebToken}.
- * 
+ *
  * @author Arjan Tijms
  */
-public class JsonWebTokenImpl extends CallerPrincipal implements JsonWebToken {
-    
+public class JsonWebTokenImpl extends org.glassfish.soteria.identitystores.jwt.JsonWebTokenImpl implements JsonWebToken {
+
     private final Map<String, JsonValue> claims;
 
     public JsonWebTokenImpl(String callerName, Map<String, JsonValue> claims) {
-        super(callerName);
+        super(callerName, claims);
         this.claims = claims;
     }
-    
-    public Map<String, JsonValue> getClaims() {
-        return claims;
-    }
-    
+
     @Override
     @SuppressWarnings("unchecked")
     public <T> T getClaim(String claimName) {
-        
+
         JsonValue claimValue = claims.get(claimName);
         if (claimValue == null) {
             return null;
         }
-        
+
         try {
             Claims claim = Claims.valueOf(claimName);
-            
+
             if (claim.getType().equals(Long.class)) {
                 return (T) (Long) ((JsonNumber) claimValue).longValue();
             }
-            
+
             if (claim.getType().equals(Set.class)) {
                 if (claimValue instanceof JsonString) {
                     return (T) singleton(((JsonString) claimValue).getString());
@@ -94,21 +91,21 @@ public class JsonWebTokenImpl extends CallerPrincipal implements JsonWebToken {
                     return (T) asStringSet((JsonArray) claimValue);
                 }
             }
-            
+
         } catch (IllegalArgumentException e) {
             // ignore, not an enum
         }
-        
+
         // All JsonValue are returned as their JsonValue sub-type, except for JsonString, which
         // is always returned as string.
         // See org.eclipse.microprofile.jwt.tck.parsing.TestTokenClaimTypesTest.validateCustomString(TestTokenClaimTypesTest.java:180)
         if (claimValue instanceof JsonString) {
             return (T) ((JsonString) claimValue).getString();
         }
-        
+
         return (T) claims.get(claimName);
     }
-    
+
     @Override
     public Set<String> getClaimNames() {
         if (claims.isEmpty()) {
@@ -117,7 +114,7 @@ public class JsonWebTokenImpl extends CallerPrincipal implements JsonWebToken {
         }
         return claims.keySet();
     }
-    
+
     private static Set<String> asStringSet(JsonArray jsonArray) {
         return new HashSet<>((jsonArray).getValuesAs(JsonString.class))
                                         .stream().map(t -> t.getString())

@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright (c) 2017-2021 Payara Foundation and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017-2019 Payara Foundation and/or its affiliates. All rights reserved.
  *
  * The contents of this file are subject to the terms of either the GNU
  * General Public License Version 2 only ("GPL") or the Common Development
@@ -37,33 +37,30 @@
  * only if the new code is made subject to such option by the copyright
  * holder.
  */
-package org.omnifaces.jwt.jwt;
+package org.omnifaces.jwt.mp.tck;
 
-import static org.eclipse.microprofile.jwt.Claims.UNKNOWN;
+import java.security.PublicKey;
 
-import jakarta.enterprise.util.AnnotationLiteral;
-
-import org.eclipse.microprofile.jwt.Claim;
-import org.eclipse.microprofile.jwt.Claims;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 
 /**
- * An annotation literal for Claim.
- * 
+ *
+ * * This implements the artefact mandated by the MP-JWT TCK for offline (outside container) testing of the token
+ * parser.
+ *
  * @author Arjan Tijms
+ *
  */
-@SuppressWarnings("all")
-public class ClaimAnnotationLiteral extends AnnotationLiteral<Claim> implements Claim {
-    
-    private static final long serialVersionUID = 1L;
+public class MockTokenParser {
 
-    @Override
-    public String value() {
-        return "";
+    public JsonWebToken parse(String bearerToken, String issuer, PublicKey signedBy) throws Exception {
+        try {
+//            jwtTokenParser.parse(bearerToken);
+//            return jwtTokenParser.verify(issuer, signedBy);
+            return null;
+        } catch (Exception e) {
+            throw new IllegalStateException("", e);
+        }
     }
 
-    @Override
-    public Claims standard() {
-        return UNKNOWN;
-    }
-    
 }
